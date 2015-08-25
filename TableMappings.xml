@@ -1,0 +1,49 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<mappings mappingNamespace="UgeUmbracoExtensions.Data">
+	<table name="Events" documentType="Event" entityTypeName="Event" entityPropertyName="Events" autoMap="true">
+		<field name="EventID" dataType="Integer" key="true"/>
+		<field name="SiteID" defaultValue="1" dataType="Integer" />
+		<field name="EventMoniker" alias="umbracoUrlName" />
+		<field name="EventName" alias="eventName" />
+		<field name="EventDate" alias="startDateTime" />
+		<field name="EventEndDate" alias="endDateTime" />
+		<field name="StartTime" alias="StartTime" />
+		<field name="EndTime" alias="EndTime" />
+		<field name="EventDescriptionHtml" defaultValue="NA" dataType="String" alias="EventDescriptionHtml" />
+		<field name="Location" alias="Location" />
+		<field name="IsExternalEvent" defaultValue="false" dataType="Boolean"/>
+		<field name="AllowTopicSuggestions"  defaultValue="false" dataType="Boolean"/>
+		<field name="AllowSessionSubmition" defaultValue="false" dataType="Boolean"/>
+		<field name="AllowTrackSubmission" defaultValue="false" dataType="Boolean"/>
+		<field name="AllowEventRegistration" defaultValue="false" dataType="Boolean"/>
+		<field name="AllowSessionVoting" defaultValue="false" dataType="Boolean"/>
+		<field name="Active" isEnabledColumn="true" defaultValue="true" dataType="Boolean" />
+		<!--<field name="EventCreateDate" />-->
+	</table>
+
+	<table name="Presentations" documentType="Presentation" entityTypeName="Presentation" entityPropertyName="Presentations" autoMap="true">
+		<field name="PresentationID" dataType="Integer" key="true"/>
+		<field name="EventID" dataType="Integer" inherit="true"/>
+		<field name="SuggestedByUserID" alias="UserID" defaultValue="5" dataType="Integer" inherit="true"/>
+		<field name="TrackID" defaultValue="1" dataType="Integer" />
+		<field alias="Track" />
+		<field name="AddedDateTime" dataType="DateTimeStamp" defaultValue="now()" />
+		<field name="IsSuggestion" defaultValue="false" dataType="Boolean" />
+		<field name="IsConfirmed" defaultValue="false" dataType="Boolean" />
+		<field name="IsScheduled" defaultValue="false" dataType="Boolean" />
+		<field name="Visible" isEnabledColumn="true" defaultValue="true" dataType="Boolean" />
+	</table>
+
+	<table name="Sponsors" documentType="Sponsors" entityTypeName="Sponsors" entityPropertityName="Sponsors">
+		<field name="SponsorID" dataType="Integer" key ="true"></field>
+		<field name="EventID" dataType="Integer" inherit="true"></field>
+		<field name="SponsorLevelID" dataType="Integer" dataValue="false"></field>
+		<!--<field name="SortNum" dataType="Integer" dataValue="false"></field>-->
+		<field name="Name" dataType="string"></field>
+		<field name="Url" dataType="string" dataValue="false"></field>
+		<field name="ContactInfo" dataType="string" dataValue="false"></field>
+		<field name="ImageLocation" dataType="string" dataValue="false"></field>
+		<field name="UserID" dataType="Integer" inherit="true"></field>
+		<field name="CreateDate" dataType="DateTimeStamp" defaultVAlue="now()"></field>
+	</table>
+</mappings>
