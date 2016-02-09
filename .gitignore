@@ -1,0 +1,16 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+.vs/
+bin/
+obj/
+packages/
+cache/
+Logs/
+NuGetBackup/
+TEMP/
+*.user
+*.suo
+
+/Website 4/Web/media/1050/logo_small.png
