@@ -18,10 +18,15 @@ namespace UmbracoDbSync
 		public MappingXmlProvider MapProvider { get; set; }
 		public Func<DbContext> ContextFunc { get; set; }
 
-		public OneWayDataSync(string xmlFileName, Func<DbContext> contextFunc)
+		public OneWayDataSync(string xmlFileName)
 		{
 			MapProvider = new MappingXmlProvider(xmlFileName);
-			ContextFunc = contextFunc;
+			ContextFunc = () =>
+			{
+				Type dbContextType = Type.GetType(MapProvider.DataContextName);
+				DbContext context = (DbContext)Activator.CreateInstance(dbContextType);
+				return context;
+			};
 
 			ContentService.Created += ContentService_Created;
 			ContentService.Deleting += ContentService_Deleting;

@@ -2,6 +2,7 @@
 using Owin;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -14,10 +15,18 @@ namespace UmbracoDbSync
 {
 	public sealed class OwinStartup
 	{
+		private OneWayDataSync Sync;
+
 		public void DbSyncStartup(IAppBuilder app)
 		{
 			string configFile = Directory.EnumerateFiles(GetHostPath(), "TableMappings.config", SearchOption.AllDirectories).FirstOrDefault();
+			string EntityFrameworkContext = ConfigurationManager.AppSettings["DbSyncEFFullTypeName"];
 
+			if (!string.IsNullOrWhiteSpace(configFile))
+			{
+				// Entity Framework
+				Sync = new OneWayDataSync(configFile); 
+			}
 		}
 
 		private string GetHostPath()

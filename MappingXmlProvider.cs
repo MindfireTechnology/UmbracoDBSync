@@ -11,6 +11,9 @@ namespace UmbracoDbSync
 	public class MappingXmlProvider
 	{
 		public string FileName { get; set; }
+
+		public string DataContextName { get; protected set; }
+
 		public IList<TableMapping> Mappings { get; set; }
 
 		public MappingXmlProvider(string fileName)
@@ -26,6 +29,7 @@ namespace UmbracoDbSync
 			{
 				var doc = XDocument.Load(fs, LoadOptions.PreserveWhitespace);
 				string nameSpace = doc.Element("mappings").Attribute("mappingNamespace").Value;
+				DataContextName = doc.Element("mappings").Attribute("dataContext").Value;
 
 				foreach (XElement table in doc.Element("mappings").Descendants("table"))
 				{
