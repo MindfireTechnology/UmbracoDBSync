@@ -312,4 +312,7 @@
   <Target Name="AfterBuild">
   </Target>
   -->
+   <Target Name="AfterBuild">
+    <Exec Command="&quot;$(SolutionDir)..\BuildTools\nuget.exe&quot; pack &quot;$(ProjectDir)UmbracoDBSync.csproj&quot; -IncludeReferencedProjects -Prop Configuration=Release" />
+  </Target>
 </Project>
