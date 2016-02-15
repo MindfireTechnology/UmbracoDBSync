@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+	<metadata>
+		<id>Mindfire.UmbracoDbSync</id>
+		<version>1.0.0.1</version>
+		<title>Umbraco DB Sync</title>
+		<authors> Nate Zaugg</authors>
+		<owners>Mindfire Technology</owners>
+		<licenseUrl>https://github.com/MindfireTechnology/UmbracoDynamicDoc/blob/master/LICENSE</licenseUrl>
+		<projectUrl>https://github.com/MindfireTechnology/UmbracoDynamicDoc</projectUrl>
+		<iconUrl>https://avatars3.githubusercontent.com/u/13372702?v=3&amp;s=200</iconUrl>
+		<requireLicenseAcceptance>false</requireLicenseAcceptance>
+		<description>
+			Umbraco DB Sync is a simple package that will allow you to sync documents and properties to tables and rows in a SQL Database (via Entity Framework). This can be helpful if you want to keep the data in Umbraco but also need to keep a SQL Database up-to-date.
+			The synchronization is controlled via an XML file that maps the documents to tables.
+			See the project page for more information.
+		</description>
+		<releaseNotes>Initial Release.</releaseNotes>
+		<copyright>Copyright 2015</copyright>
+		<tags>UmbracoCMS Umbraco Database Sync</tags>
+		<dependencies>
+			<dependency id="UmbracoCms.Core" version="7.2.8" />
+		</dependencies>
+	</metadata>
+</package>

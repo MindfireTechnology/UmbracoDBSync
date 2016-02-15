@@ -292,12 +292,16 @@
     <None Include="app.config">
       <SubType>Designer</SubType>
     </None>
+    <None Include="Mindfire.UmbracoDbSync.1.0.0.0.nupkg" />
+    <None Include="Mindfire.UmbracoDbSync.nuspec" />
   </ItemGroup>
   <ItemGroup>
     <None Include="LICENSE" />
     <None Include="packages.config" />
     <None Include="README.md" />
-    <None Include="TableMappings.config" />
+    <None Include="TableMappings.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="packages\Microsoft.Bcl.Build.1.0.14\tools\Microsoft.Bcl.Build.targets" Condition="Exists('packages\Microsoft.Bcl.Build.1.0.14\tools\Microsoft.Bcl.Build.targets')" />
@@ -312,7 +316,7 @@
   <Target Name="AfterBuild">
   </Target>
   -->
-   <Target Name="AfterBuild">
+  <Target Name="AfterBuild">
     <Exec Command="&quot;$(SolutionDir)..\BuildTools\nuget.exe&quot; pack &quot;$(ProjectDir)UmbracoDBSync.csproj&quot; -IncludeReferencedProjects -Prop Configuration=Release" />
   </Target>
 </Project>
