@@ -12,6 +12,8 @@ namespace UmbracoDbSync
 		/// <summary>Table Name</summary>
 		public string Name { get; set; }
 		public string DocumentType { get; set; }
+		public string Assembly { get; set; }
+		public string Namespace { get; set; }
 		public string EntityTypeFullName { get; set; }
 		public string EntityTypeName { get { return EntityTypeFullName.Substring(EntityTypeFullName.LastIndexOf(".") + 1); } }
 		public string EntityPropertyName { get; set; }

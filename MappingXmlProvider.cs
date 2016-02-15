@@ -13,6 +13,7 @@ namespace UmbracoDbSync
 		public string FileName { get; set; }
 
 		public string DataContextName { get; protected set; }
+		public string Assembly { get; set; }
 
 		public IList<TableMapping> Mappings { get; set; }
 
@@ -28,17 +29,19 @@ namespace UmbracoDbSync
 			using (Stream fs = File.Open(FileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
 			{
 				var doc = XDocument.Load(fs, LoadOptions.PreserveWhitespace);
-				string nameSpace = doc.Element("mappings").Attribute("mappingNamespace").Value;
+				string ns = doc.Element("mappings").Attribute("namespace") != null ? doc.Element("mappings").Attribute("namespace").Value : null;
+				Assembly = doc.Element("mappings").Attribute("assembly").Value;
 				DataContextName = doc.Element("mappings").Attribute("dataContext").Value;
+
 
 				foreach (XElement table in doc.Element("mappings").Descendants("table"))
 				{
-					ProcessTableMapping(nameSpace, table);
+					ProcessTableMapping(table, ns);
 				}
 			}
 		}
 
-		protected void ProcessTableMapping(string nameSpace, XElement table)
+		protected void ProcessTableMapping(XElement table, string defaultNamespace)
 		{
 			var tableMap = new TableMapping();
 			if (table.Attribute("name") == null)
@@ -50,12 +53,20 @@ namespace UmbracoDbSync
 			MapValue(table, "autoMap", n => tableMap.AutoMapFields = bool.Parse(n));
 			MapValue(table, "allowDelete", n => tableMap.AllowDelete = bool.Parse(n));
 			MapValue(table, "entityPropertyName", n => tableMap.EntityPropertyName = n);
+			MapValue(table, "namespace", n => tableMap.Namespace = n);
+			MapValue(table, "assemlby", n => tableMap.Assembly = n);
+
+			if (string.IsNullOrWhiteSpace(tableMap.Namespace))
+				tableMap.Namespace = defaultNamespace;
+
+			if (string.IsNullOrWhiteSpace(tableMap.Assembly))
+				tableMap.Assembly = Assembly;
 
 			// Normalization
 			if (string.IsNullOrWhiteSpace(tableMap.EntityPropertyName))
 				tableMap.EntityPropertyName = tableMap.Name;
 
-			tableMap.EntityTypeFullName = nameSpace + "." + (string.IsNullOrWhiteSpace(tableMap.EntityTypeFullName) ?
+			tableMap.EntityTypeFullName = tableMap.Namespace + "." + (string.IsNullOrWhiteSpace(tableMap.EntityTypeFullName) ?
 				tableMap.Name : tableMap.EntityTypeFullName);
 
 			// Children
