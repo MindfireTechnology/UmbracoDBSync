@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Entity;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Web.Security;
+using Umbraco.Core;
 using Umbraco.Core.Events;
 using Umbraco.Core.Models;
 using Umbraco.Core.Services;
@@ -13,12 +15,22 @@ namespace UmbracoDbSync
 	/// <summary>
 	/// This class will sync data from Umbraco to a database based on configuration & Mappings
 	/// </summary>
-	public class OneWayDataSync
+	public sealed class OneWayDataSync : ApplicationEventHandler
 	{
 		public MappingXmlProvider MapProvider { get; set; }
 		public Func<DbContext> ContextFunc { get; set; }
 
-		public OneWayDataSync(string xmlFileName)
+
+		protected override void ApplicationStarted(UmbracoApplicationBase umbracoApplication, ApplicationContext applicationContext)
+		{
+			base.ApplicationStarted(umbracoApplication, applicationContext);
+
+			string configFile = Directory.EnumerateFiles(GetHostPath(), "TableMappings.config", SearchOption.AllDirectories).FirstOrDefault();
+			if (!string.IsNullOrWhiteSpace(configFile))
+				Initialize(configFile);
+		}
+
+		private void Initialize(string xmlFileName)
 		{
 			MapProvider = new MappingXmlProvider(xmlFileName);
 			ContextFunc = () =>
@@ -30,6 +42,12 @@ namespace UmbracoDbSync
 
 			ContentService.Created += ContentService_Created;
 			ContentService.Deleting += ContentService_Deleting;
+		}
+
+		private string GetHostPath()
+		{
+			// Getting the path in a somewhat platform agnostic way.
+			return Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 		}
 
 		private void ContentService_Deleting(IContentService sender, DeleteEventArgs<IContent> e)

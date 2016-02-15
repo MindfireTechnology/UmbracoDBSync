@@ -285,7 +285,6 @@
     <Compile Include="FieldMapping.cs" />
     <Compile Include="MappingXmlProvider.cs" />
     <Compile Include="OneWayDataSync.cs" />
-    <Compile Include="OwinStartup.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TableMapping.cs" />
   </ItemGroup>
