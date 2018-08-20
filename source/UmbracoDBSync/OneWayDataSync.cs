@@ -44,13 +44,26 @@ namespace UmbracoDbSync
 
 			ContentService.Saving += ContentService_Saving;
 			ContentService.Deleting += ContentService_Deleting;
+			ContentService.Trashed += ContentService_Trashed;
 		}
-
 		private string GetHostPath()
 		{
 			// Getting the path in a somewhat platform agnostic way.
 			return HttpContext.Current.Server.MapPath("~/");
 		}
+
+		private void ContentService_Trashed(IContentService sender, MoveEventArgs<IContent> e)
+		{
+			// We don't really support the recycle bin here. If they delete it, we ask the system to actually delete it.
+			foreach (var entry in e.MoveInfoCollection)
+			{
+				string documentType = entry.Entity.ContentType.Alias;
+				var mapping = MapProvider.Mappings.SingleOrDefault(n => n.DocumentType == documentType);
+				if (mapping != null)
+					ApplicationContext.Current.Services.ContentService.Delete(entry.Entity);
+			}
+		}
+
 
 		private void ContentService_Deleting(IContentService sender, DeleteEventArgs<IContent> e)
 		{
@@ -86,10 +99,7 @@ namespace UmbracoDbSync
 				dynamic dbset = GetPropertyValueByName(context, mapping.EntityPropertyName);
 
 				if (!updating)
-				{
-
 					entity = CreateObjectFromTypeName(mapping.Assembly, mapping.EntityTypeFullName);
-				}
 				else
 					entity = dbset.Find(key);
 
@@ -101,11 +111,9 @@ namespace UmbracoDbSync
 
 				context.SaveChanges();
 
-				// Set the key
+				// Set the newly generated key (when applicable)
 				if (!updating)
-				{
 					SetDocumentValue(document, keyProp.Alias, GetPropertyValueByName(entity, keyProp.Name));
-				}
 			}
 		}
 
@@ -164,6 +172,10 @@ namespace UmbracoDbSync
 					dynamic dbset = GetPropertyValueByName(context, mapping.EntityPropertyName);
 					dynamic entity = dbset.Find(key);
 
+					// Does the database even have this entity anymore?
+					if (entity == null)
+						return;
+
 					if (mapping.FieldMappings.Any(n => n.IsEnabledColumn))
 					{
 						SetValue(entity, false, mapping.FieldMappings.Single(n => n.IsEnabledColumn).Name);
@@ -203,6 +215,10 @@ namespace UmbracoDbSync
 			if (value != null && !string.IsNullOrWhiteSpace(propertyName))
 			{
 				var prop = GetPropertyByName(target, propertyName);
+
+				if (prop.PropertyType == typeof(bool))
+					value = (value?.ToString() == "1" || (value != null && value.ToString().Equals("true", StringComparison.CurrentCultureIgnoreCase))) ? true : false;
+
 				object setVal = null;
 				if (prop.PropertyType.IsGenericType && prop.PropertyType.GetGenericTypeDefinition() == typeof(Nullable<>))
 					setVal = Convert.ChangeType(value, prop.PropertyType.GetGenericArguments()[0]);
@@ -221,54 +237,54 @@ namespace UmbracoDbSync
 			foreach (var prop in mapping.FieldMappings)
 			{
 				completed.Add(prop.Alias);
-				if (!prop.Key)
+				if (prop.Key)
+					continue;
+
+				object value = GetDocumentValue(document, prop.Alias);
+				if (value != null)
 				{
-					object value = GetDocumentValue(document, prop.Alias);
-					if (value != null)
-					{
-						SetValue(entity, value, prop.Name);
-						continue;
-					}
+					SetValue(entity, value, prop.Name);
+					continue;
+				}
 
-					// Default Value
-					if (prop.DefaultValue != null)
+				// Default Value
+				if (prop.DefaultValue != null)
+				{
+					if (prop.FieldType == DataType.String)
 					{
-						if (prop.FieldType == DataType.String)
-						{
-							if (string.IsNullOrWhiteSpace(GetPropertyValueByName(entity, prop.Name)))
-								SetValue(entity, prop.DefaultValue, prop.Name);
-						}
-						else if (prop.FieldType == DataType.Integer)
-						{
-							if (0 == GetPropertyValueByName(entity, prop.Name) || GetPropertyValueByName(entity, prop.Name) == null)
-								SetValue(entity, prop.DefaultValue, prop.Name);
-						}
-						else if (prop.FieldType == DataType.DateTime)
-						{
-							if (DateTime.MinValue == GetPropertyValueByName(entity, prop.Name) || GetPropertyValueByName(entity, prop.Name) == null)
-								SetValue(entity, prop.DefaultValue, prop.Name);
-						}
-						else if (prop.FieldType == DataType.Boolean)
-						{
+						if (string.IsNullOrWhiteSpace(GetPropertyValueByName(entity, prop.Name)))
 							SetValue(entity, prop.DefaultValue, prop.Name);
-						}
-						else if (prop.FieldType == DataType.DateTimeStamp)
-						{
-							SetValue(entity, DateTime.Now, prop.Name);
-						}
 					}
-
-					// Inherited?
-					if (prop.Inherit)
+					else if (prop.FieldType == DataType.Integer)
 					{
-						if (prop.Alias == "UserID" && Membership.GetUser() != null)
-							SetValue(entity, Membership.GetUser().ProviderUserKey, prop.Name);
-						else
-						{
-							value = SearchAncestorForProperty(document, prop.Alias);
-							if (value != null)
-								SetValue(entity, value, prop.Name);
-						}
+						if (0 == GetPropertyValueByName(entity, prop.Name) || GetPropertyValueByName(entity, prop.Name) == null)
+							SetValue(entity, prop.DefaultValue, prop.Name);
+					}
+					else if (prop.FieldType == DataType.DateTime)
+					{
+						if (DateTime.MinValue == GetPropertyValueByName(entity, prop.Name) || GetPropertyValueByName(entity, prop.Name) == null)
+							SetValue(entity, prop.DefaultValue, prop.Name);
+					}
+					else if (prop.FieldType == DataType.Boolean)
+					{
+						SetValue(entity, prop.DefaultValue, prop.Name);
+					}
+					else if (prop.FieldType == DataType.DateTimeStamp)
+					{
+						SetValue(entity, DateTime.Now, prop.Name);
+					}
+				}
+
+				// Inherited?
+				if (prop.Inherit)
+				{
+					if (prop.Alias == "UserID" && Membership.GetUser() != null)
+						SetValue(entity, Membership.GetUser().ProviderUserKey, prop.Name);
+					else
+					{
+						value = SearchAncestorForProperty(document, prop.Alias);
+						if (value != null)
+							SetValue(entity, value, prop.Name);
 					}
 				}
 			}
@@ -294,8 +310,7 @@ namespace UmbracoDbSync
 		{
 			if (document.Properties.Any(n => n.Alias == alias))
 				return document.Properties[alias].Value;
-			else
-				if (document.Level > 1)
+			else if (document.Parent() != null)
 				return SearchAncestorForProperty(document.Parent(), alias);
 			else
 				return null;
